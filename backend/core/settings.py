@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
-from os import environ as env
+import os
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,12 +23,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.get("SECRET_KEY")
+
+# SECRET_KEY = "django-insecure-a0lf7b3!nrkz6czljxtd-^v2!b-2e*s8i8z3r-dpd5pwgx7=@b"
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable not set")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
 
 
 # Application definition
@@ -92,11 +98,11 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env.get("POSTGRES_DB"),
-        "USER": env.get("POSTGRES_USER"),
-        "PASSWORD": env.get("POSTGRES_PASSWORD"),
-        "HOST": env.get("POSTGRES_HOST"),
-        "PORT": env.get("POSTGRES_PORT"),
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST") if not DEBUG else "localhost",
+        "PORT": os.getenv("DB_PORT"),
     }
 }
 
@@ -140,7 +146,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 STATICFILES_DIRS = [
-    BASE_DIR / "frontend/dist/static",  # React build output
+    BASE_DIR / "frontend/dist/assets",  # React build output
 ]
 
 # Default primary key field type
@@ -149,12 +155,6 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ACCOUNT_AUTHENTICATION_METHODS = "email"
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
 ACCOUNT_UNIQUE_USERNAME = True
 ACCOUNT_UNIQUE_EMAIL = True
 
@@ -167,9 +167,9 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = env.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env.get("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = env.get("DEFAULT_FROM_EMAIL")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
 # REST FRAMEWORK
 REST_FRAMEWORK = {

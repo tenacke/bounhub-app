@@ -170,3 +170,7 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+media/
+static/
+staticfiles/
