@@ -1,0 +1,26 @@
+# Python/Django specific files
+*.pyc
+*.pyo
+*.pyd
+**/__pycache__/
+*.sqlite3
+*.log
+*.pot
+*.mo
+*.env
+*.venv/
+*.egg-info/
+db.sqlite3
+.env
+venv/
+static/
+staticfiles/
+media/
+
+# Docker specific files
+Dockerfile
+docker-compose.yaml
+
+# OS generated files
+.DS_Store
+Thumbs.db

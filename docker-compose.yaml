@@ -1,7 +1,8 @@
 version: "3.8"
 services:
   db:
-    image: postgres:alpine
+    image: postgres:17-alpine
+    container_name: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file: ./backend/db.env
@@ -19,11 +20,8 @@ services:
   api:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    command:
-      - sh
-      - -c
-      - "python manage.py collectstatic --noinput && python manage.py migrate && gunicorn core.wsgi --bind 0.0.0.0:8000 --workers 4 --reload"
+    volumes:
+      - django_static:/app/staticfiles
     env_file: ./backend/api.env
     environment:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
@@ -31,18 +29,11 @@ services:
       EMAIL_HOST_USER: ${EMAIL_HOST_USER}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: on-failure
     networks:
       - app_network
@@ -50,12 +41,11 @@ services:
   web:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    env_file: ./frontend/web.env
     volumes:
-      - ./frontend:/app
-    ports:
-      - "80:80"
+      - react_build:/app/dist
+    env_file: ./frontend/web.env
+    # ports:
+    #   - "5173:5173"
     depends_on:
       - api
     restart: on-failure
@@ -63,14 +53,14 @@ services:
       - app_network
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.27-alpine-slim
+    container_name: nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf # Mount your Nginx config
-      - ./frontend/dist:/usr/share/nginx/html # React build output
-      - ./backend/static:/app/static # Django static files
-      - ./backend/media:/app/media # Django media files
+      - react_build:/usr/share/nginx/html # React build output
+      - django_static:/app/staticfiles # Django static files
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - web
       - api
@@ -84,3 +74,5 @@ networks:
 
 volumes:
   postgres_data:
+  react_build:
+  django_static:
