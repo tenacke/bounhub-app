@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   db:
-    image: postgres:17-alpine
+    image: postgres:17.4-alpine3.21
     container_name: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -44,8 +44,6 @@ services:
     volumes:
       - react_build:/app/dist
     env_file: ./frontend/web.env
-    # ports:
-    #   - "5173:5173"
     depends_on:
       - api
     restart: on-failure
@@ -53,14 +51,17 @@ services:
       - app_network
 
   nginx:
-    image: nginx:1.27-alpine-slim
+    image: nginx:1.27.4-alpine3.21-slim
     container_name: nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf # Mount your Nginx config
       - react_build:/usr/share/nginx/html # React build output
       - django_static:/app/staticfiles # Django static files
+      - ./cert.pem:/etc/nginx/certificates/cert.pem # SSL certificate
+      - ./key.pem:/etc/nginx/certificates/key.pem # SSL key
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - web
       - api
